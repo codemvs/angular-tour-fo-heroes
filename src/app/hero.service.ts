@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, ignoreElements, map, tap } from 'rxjs/operators';
 import {Hero} from './hero';
 import { HEROES } from './mock-heores';
 
@@ -66,7 +66,20 @@ export class HeroService {
     this.messageService.add(`HeroService: ${message}`);
   }
   
-  /**
+  searchHeroes(term: string): Observable<Hero[]>{
+    if(!term.trim()){
+      return of([]);
+    }
+    return this.http.get<Hero[]>(`${this.heroesUrl}/?name=${term}`).pipe(
+      tap(x => x.length ?
+        this.log(`found heroes matchig "${term}"`):
+        this.log(`no heroes matching "${term}"`)
+      ),
+      catchError(this.handleError<Hero[]>('searchHeroes',[]))
+    );
+  }
+
+ /**
  * Handle Http operation that failed.
  * Let the app continue.
  * @param operation - name of the operation that failed
